@@ -52,24 +52,44 @@ ImageWidget.prototype.render = function(parent,nextSibling) {
 		tiddler = this.wiki.getTiddler(this.imageSource);
 	if(!tiddler) {
 		// The source isn't the title of a tiddler, so we'll assume it's a URL
-		src = this.imageSource;
+		src = this.getVariable("tv-get-export-image-link",{params: [{name: "src",value: this.imageSource}],defaultValue: this.imageSource});
 	} else {
 		// Check if it is an image tiddler
 		if(this.wiki.isImageTiddler(this.imageSource)) {
-			// Render the appropriate element for the image type
 			var type = tiddler.fields.type,
-				text = tiddler.fields.text;
-			switch(type) {
-				case "application/pdf":
-					tag = "embed";
-					src = "data:application/pdf;base64," + text;
-					break;
-				case "image/svg+xml":
-					src = "data:image/svg+xml," + encodeURIComponent(text);
-					break;
-				default:
-					src = "data:" + type + ";base64," + text;
-					break;
+				text = tiddler.fields.text,
+				_canonical_uri = tiddler.fields._canonical_uri;
+			// If the tiddler has body text then it doesn't need to be lazily loaded
+			if(text) {
+				// Render the appropriate element for the image type
+				switch(type) {
+					case "application/pdf":
+						tag = "embed";
+						src = "data:application/pdf;base64," + text;
+						break;
+					case "image/svg+xml":
+						src = "data:image/svg+xml," + encodeURIComponent(text);
+						break;
+					default:
+						src = "data:" + type + ";base64," + text;
+						break;
+				}
+			} else if(_canonical_uri) {
+				switch(type) {
+					case "application/pdf":
+						tag = "embed";
+						src = _canonical_uri;
+						break;
+					case "image/svg+xml":
+						src = _canonical_uri;
+						break;
+					default:
+						src = _canonical_uri;
+						break;
+				}	
+			} else {
+				// Just trigger loading of the tiddler
+				this.wiki.getTiddlerText(this.imageSource);
 			}
 		}
 	}
@@ -80,13 +100,16 @@ ImageWidget.prototype.render = function(parent,nextSibling) {
 		domNode.setAttribute("class",this.imageClass);		
 	}
 	if(this.imageWidth) {
-		domNode.setAttribute("width",parseInt(this.imageWidth,10) + "px");
+		domNode.setAttribute("width",this.imageWidth);
 	}
 	if(this.imageHeight) {
-		domNode.setAttribute("height",parseInt(this.imageHeight,10) + "px");
+		domNode.setAttribute("height",this.imageHeight);
 	}
 	if(this.imageTooltip) {
 		domNode.setAttribute("title",this.imageTooltip);		
+	}
+	if(this.imageAlt) {
+		domNode.setAttribute("alt",this.imageAlt);		
 	}
 	// Insert element
 	parent.insertBefore(domNode,nextSibling);
@@ -103,6 +126,7 @@ ImageWidget.prototype.execute = function() {
 	this.imageHeight = this.getAttribute("height");
 	this.imageClass = this.getAttribute("class");
 	this.imageTooltip = this.getAttribute("tooltip");
+	this.imageAlt = this.getAttribute("alt");
 };
 
 /*

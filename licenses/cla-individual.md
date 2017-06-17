@@ -141,7 +141,7 @@ Bram Chen, @BramChen, 2014/02/20
 
 Xavier Cazin, @xcazin, 2014/02/21
 
-Rustem Akbulatov, @nameanyone, 2014/03/04
+Rustem Akbulatov, @rubaboo, 2014/03/04
 
 Harald Albrecht, @TheDiveO, 2014/03/12
 
@@ -158,3 +158,165 @@ Devin Weaver, @sukima, 2014/05/21
 Irene Knapp, @IreneKnapp, 2014/05/17
 
 Kamen Petroff, @kpe, 2014/06/02
+
+Daniel Rodriguez Rivero, @danielo515, 2014/04/18
+
+Jonathan Lister, @jayfresh, 2014/06/23
+
+Stephan Sokolow, @ssokolow, 2014/07/15
+
+Dave Gifford, @giffmex, 2014/09/05
+
+Eucaly J, @Eucaly, 2014/09/14
+
+Mal Gamble, @malgam, 2014/09/19
+
+Ton Gerner, @gernert, 2014/09/19
+
+Julie Bertrand, @Evolena, 2014/09/22
+
+Andrey Yankin, @andrey013, 2014/09/30
+
+David john, @fghhfg, 2014/10/06
+
+Mark S., @marxsal, 2014/10/18
+
+Erwan Moreau, @erwanm, 2014/10/27
+
+Felix Küppers, @felixhayashi, 2014/11/02
+
+Roma Hicks, @roma0104, 2014/11/18
+
+Jedediah Carty, @inmysocks, 2014/11/21
+
+Erwan Dano, @Braincoke, 2014/11/24
+
+Jim Lehmer, @dullroar, 2014/12/07
+
+Aurelien Navarre, @anavarre, 2014/12/15
+
+Astrid Elocson, @aelocson, 2014/12/21
+
+Andreas Hahn, @Drakor, 2014/12/21
+
+Jean-Charles Longuet, @Jc-L, 2014/12/22
+
+Evgeniy Gryaznov, @evgeniy-gryaznov, 2014/12/23
+
+Andrew Harrison, @infurnoape, 2014/12/27
+
+Arlen Beiler, @arlen22, 2014/12/30
+
+David P Dannemiller, @dpdannemiller, 2015/01/10
+
+Ben Williams, @Mathobal, 2015/01/26
+
+Neil Griffin, @ng110, 2015/01/20
+
+Alex Hough, @alexhough 2015/01/26
+
+Florent V., @Spangenhelm 2015/02/03
+
+Francisco A., @le-pako 2015/03/14
+
+Andreas Abeck, @andreasabeck 2015/03/18
+
+Hong-Yi Dai, @reflectionalist 2015/04/04
+
+YangWeiQin, @heroboy 2015/04/19
+
+vouko, @vouko 2015/05/02
+
+Christian Ehmke, @cehmke 2015/05/10
+
+kixam, @kixam, 2015/05/27
+
+Sylvain Naudin, @silvyn, 2015/06/09
+
+Lolo le 13 @lolole13 2015/06/04
+
+Steven McDonald, @StevenMcD 2015/05/21
+
+Richard Smith, @richardwsmith 2015/05/22
+
+Marco Rimoldi, @marcor, 2015/06/26
+
+Slobodan Vujnovic, @slovuj, 2015/06/30
+
+Anthon Nilsson, @superdos, 2015/08/06
+
+Myeongjin, @araname, 2015/08/08
+
+Hegart Dmishiv, @hegart-dmishiv, 2015/09/15
+
+William Jackson, @matabele 2015/09/26
+
+Karl Knechtel, @zahlman, 2015/10/03
+
+Tony Grosinger @tgrosinger 2015/10/03
+
+Antaeus Feldspar @afeldspar 2015/10/20
+
+Soeren Enevoldsen, @senevoldsen90, 2015/10/09
+
+Santiago Pelufo, @spelufo, 2015/12/18
+
+Matthew Lauber, @mklauber, 2015/11/13
+
+Matthew DeAbreu, @mdeabreu, 2016/01/05
+
+Cameron Fischer, @flibbles, 2016/01/08
+
+Jim, @ARRRRGH, 2016/01/11
+
+Koke Laast, @Koke24, 2016/01/27
+
+Thomas Elmiger, @telmiger, 2016/02/02
+
+Richard Rath @rcrath 2016/02/12
+
+Eric Drechsel @edrex 2016/02/15
+
+Tomasz Pijanowski @zakrec 2016/02/21
+
+@FND 2016/02/27
+
+Cengizhan Kurt, @webninjasi, 2016/03/03
+
+Knut Franke, @nome, 2016/03/20
+
+Pau Deluca, @PauDeLuca, 2016/04/11
+
+Brent Maxwell, @brentmaxwell, 2016/05/20
+
+Thomas Herlea, @maxthomax, 2016/06/09
+
+Segey Shishkin, @serj_aleks, 2016/07/28
+
+Przemek Wesołek, @jest, 2016/08/05
+
+Doron Tzur, @DoronTzur 2016/08/16
+
+Hans Christian Haase, @hchaase, 2016/08/11
+
+steve schneider, @stevesunypoly, 2016/08/26
+
+Nuno Mota, @nmota, 2016/12/16
+
+Sylvain Comte, @sycom, 2016/12/20
+
+Saul D Beniquez, @beniquezsd 2017/01/01
+
+Rizwan Ishak, @ibnishak, 2017/01/10
+
+Stefano De Dionigi, @dedioste, 2017/01/19
+
+Matias Goldman, @twMat, 2017/01/22
+
+Andrew Webb, @tejjyid, 2017/03/06
+
+Richard Decal, @crypdick, 2017/04/04
+
+Adrian Morosanu, @morosanuae, 2017/06/02
+
+Saq Imtiaz, @saqimtiaz, 2017/06/14

@@ -26,7 +26,7 @@ Command.prototype.execute = function() {
 	var fs = require("fs"),
 		path = require("path");
 	// Check that we don't already have a valid wiki folder
-	if($tw.boot.wikiTiddlersPath) {
+	if($tw.boot.wikiTiddlersPath || ($tw.utils.isDirectory($tw.boot.wikiPath) && !$tw.utils.isDirectoryEmpty($tw.boot.wikiPath))) {
 		return "Wiki folder is not empty";
 	}
 	// Loop through each of the specified editions
@@ -34,7 +34,7 @@ Command.prototype.execute = function() {
 	for(var editionIndex=0; editionIndex<editions.length; editionIndex++) {
 		var editionName = editions[editionIndex];
 		// Check the edition exists
-		var editionPath = path.resolve($tw.boot.corePath,$tw.config.editionsPath) + path.sep + editionName;
+		var editionPath = $tw.findLibraryItem(editionName,$tw.getLibraryItemSearchPaths($tw.config.editionsPath,$tw.config.editionsEnvVar));
 		if(!$tw.utils.isDirectory(editionPath)) {
 			return "Edition '" + editionName + "' not found";
 		}

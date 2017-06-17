@@ -13,7 +13,7 @@ Module that creates a $tw.utils.Scroller object prototype that manages scrolling
 "use strict";
 
 /*
-Event handler for when the `tw-scroll` event hits the document body
+Event handler for when the `tm-scroll` event hits the document body
 */
 var PageScroller = function() {
 	this.idRequestFrame = null;
@@ -44,7 +44,7 @@ PageScroller.prototype.cancelScroll = function() {
 Handle an event
 */
 PageScroller.prototype.handleEvent = function(event) {
-	if(event.type === "tw-scroll") {
+	if(event.type === "tm-scroll") {
 		return this.scrollIntoView(event.target);
 	}
 	return true;
@@ -68,24 +68,33 @@ PageScroller.prototype.scrollIntoView = function(element) {
 			height: clientBounds.height
 		};
 	// We'll consider the horizontal and vertical scroll directions separately via this function
+	// targetPos/targetSize - position and size of the target element
+	// currentPos/currentSize - position and size of the current scroll viewport
+	// returns: new position of the scroll viewport
 	var getEndPos = function(targetPos,targetSize,currentPos,currentSize) {
+			var newPos = currentPos;
 			// If the target is above/left of the current view, then scroll to it's top/left
 			if(targetPos <= currentPos) {
-				return targetPos;
+				newPos = targetPos;
 			// If the target is smaller than the window and the scroll position is too far up, then scroll till the target is at the bottom of the window
 			} else if(targetSize < currentSize && currentPos < (targetPos + targetSize - currentSize)) {
-				return targetPos + targetSize - currentSize;
+				newPos = targetPos + targetSize - currentSize;
 			// If the target is big, then just scroll to the top
 			} else if(currentPos < targetPos) {
-				return targetPos;
+				newPos = targetPos;
 			// Otherwise, stay where we are
 			} else {
-				return currentPos;
+				newPos = currentPos;
 			}
+			// If we are scrolling within 50 pixels of the top/left then snap to zero
+			if(newPos < 50) {
+				newPos = 0;
+			}
+			return newPos;
 		},
 		endX = getEndPos(bounds.left,bounds.width,scrollPosition.x,window.innerWidth),
 		endY = getEndPos(bounds.top,bounds.height,scrollPosition.y,window.innerHeight);
-	// Only scroll if necessary
+	// Only scroll if the position has changed
 	if(endX !== scrollPosition.x || endY !== scrollPosition.y) {
 		var self = this,
 			drawFrame;

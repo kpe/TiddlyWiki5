@@ -1,33 +1,25 @@
 title: $:/core/ui/PageTemplate/sidebar
 tags: $:/tags/PageTemplate
 
-<$scrollable fallthrough="no" class="tw-sidebar-scrollable">
+<$scrollable fallthrough="no" class="tc-sidebar-scrollable">
 
-<div class="sidebar-header">
+<div class="tc-sidebar-header">
 
-<$reveal state="$:/state/sidebar" type="match" text="yes" default="yes" retain="yes">
+<$reveal state="$:/state/sidebar" type="match" text="yes" default="yes" retain="yes" animate="yes">
 
-<div class="tw-site-title">
+<h1 class="tc-site-title">
 
 <$transclude tiddler="$:/SiteTitle" mode="inline"/>
 
-</div>
+</h1>
 
-<div class="tw-site-subtitle">
+<div class="tc-site-subtitle">
 
 <$transclude tiddler="$:/SiteSubtitle" mode="inline"/>
 
 </div>
 
-<div class="tw-page-controls">
-
-<$list filter="[all[shadows+tiddlers]tag[$:/tags/PageControls]!has[draft.of]]" variable="listItem">
-
-<$transclude tiddler=<<listItem>> mode="inline"/>
-
-</$list>
-
-</div>
+{{||$:/core/ui/PageTemplate/pagecontrols}}
 
 <$transclude tiddler="$:/core/ui/SideBarLists" mode="inline"/>
 

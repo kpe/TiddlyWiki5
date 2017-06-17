@@ -18,11 +18,8 @@ Create a widget object for a parse tree node
 	options: see below
 Options include:
 	wiki: mandatory reference to wiki associated with this render tree
-	variables: optional hashmap of context variables (see below)
 	parentWidget: optional reference to a parent renderer node for the context chain
 	document: optional document object to use instead of global document
-Context variables include:
-	currentTiddler: title of the tiddler providing the context
 */
 var Widget = function(parseTreeNode,options) {
 	if(arguments.length > 0) {
@@ -128,7 +125,7 @@ Widget.prototype.substituteVariableParameters = function(text,formalParams,actua
 			// If we've still not got a value, use the default, if any
 			paramValue = paramValue || paramInfo["default"] || "";
 			// Replace any instances of this parameter
-			text = text.replace(new RegExp("\\$" + $tw.utils.escapeRegExp(paramInfo.name) + "\\$","mg"),paramValue);
+			text = $tw.utils.replaceString(text,new RegExp("\\$" + $tw.utils.escapeRegExp(paramInfo.name) + "\\$","mg"),paramValue);
 		}
 	}
 	return text;
@@ -136,7 +133,7 @@ Widget.prototype.substituteVariableParameters = function(text,formalParams,actua
 
 Widget.prototype.substituteVariableReferences = function(text) {
 	var self = this;
-	return text.replace(/\$\(([^\)\$]+)\)\$/g,function(match,p1,offset,string) {
+	return (text || "").replace(/\$\(([^\)\$]+)\)\$/g,function(match,p1,offset,string) {
 		return self.getVariable(p1,{defaultValue: ""});
 	});
 };
@@ -174,7 +171,7 @@ Widget.prototype.evaluateMacroModule = function(name,actualParams,defaultValue) 
 		else for(var i=0; i<actualParams.length; ++i) {
 			args.push(actualParams[i].value);
 		}
-		return macro.run.apply(this,args)
+		return (macro.run.apply(this,args) || "").toString();
 	} else {
 		return defaultValue;
 	}
@@ -198,16 +195,23 @@ Widget.prototype.hasVariable = function(name,value) {
 Construct a qualifying string based on a hash of concatenating the values of a given variable in the parent chain
 */
 Widget.prototype.getStateQualifier = function(name) {
+	this.qualifiers = this.qualifiers || Object.create(null);
 	name = name || "transclusion";
-	var output = [],
-		node = this;
-	while(node && node.parentWidget) {
-		if($tw.utils.hop(node.parentWidget.variables,name)) {
-			output.push(node.getVariable(name));
+	if(this.qualifiers[name]) {
+		return this.qualifiers[name];
+	} else {
+		var output = [],
+			node = this;
+		while(node && node.parentWidget) {
+			if($tw.utils.hop(node.parentWidget.variables,name)) {
+				output.push(node.getVariable(name));
+			}
+			node = node.parentWidget;
 		}
-		node = node.parentWidget;
+		var value = $tw.utils.hashString(output.join(""));
+		this.qualifiers[name] = value;
+		return value;
 	}
-	return "{" + $tw.utils.hashString(output.join("")) + "}";
 };
 
 /*
@@ -218,7 +222,9 @@ Widget.prototype.computeAttributes = function() {
 		self = this,
 		value;
 	$tw.utils.each(this.parseTreeNode.attributes,function(attribute,name) {
-		if(attribute.type === "indirect") {
+		if(attribute.type === "filtered") {
+			value = self.wiki.filterTiddlers(attribute.filter,self)[0] || "";
+		} else if(attribute.type === "indirect") {
 			value = self.wiki.getTextReference(attribute.textReference,"",self.getVariable("currentTiddler"));
 		} else if(attribute.type === "macro") {
 			value = self.getVariable(attribute.value.name,{params: attribute.value.params});
@@ -266,9 +272,14 @@ Widget.prototype.assignAttributes = function(domNode,options) {
 			v = undefined;
 		}
 		if(v !== undefined) {
+			var b = a.split(":");
 			// Setting certain attributes can cause a DOM error (eg xmlns on the svg element)
 			try {
-				domNode.setAttributeNS(null,a,v);
+				if (b.length == 2 && b[0] == "xlink"){
+					domNode.setAttributeNS("http://www.w3.org/1999/xlink",b[1],v);
+				} else {
+					domNode.setAttributeNS(null,a,v);
+				}
 			} catch(e) {
 			}
 		}
@@ -292,7 +303,7 @@ Construct the widget object for a parse tree node
 Widget.prototype.makeChildWidget = function(parseTreeNode) {
 	var WidgetClass = this.widgetClasses[parseTreeNode.type];
 	if(!WidgetClass) {
-		WidgetClass = this.widgetClasses["text"];
+		WidgetClass = this.widgetClasses.text;
 		parseTreeNode = {type: "text", text: "Undefined widget '" + parseTreeNode.type + "'"};
 	}
 	return new WidgetClass(parseTreeNode,{
@@ -360,8 +371,7 @@ Widget.prototype.addEventListener = function(type,handler) {
 	} else { // The handler is a function
 		this.eventListeners[type] = function(event) {
 			return handler.call(self,event);
-		}
-
+		};
 	}
 };
 
@@ -433,7 +443,9 @@ if(index === -1) {
 	var grandParent = parent.parentWidget;
 	if(grandParent && parent.parentDomNode === this.parentDomNode) {
 		index = grandParent.children.indexOf(parent);
-		return parent.findNextSiblingDomNode(index);
+		if(index !== -1) {
+			return parent.findNextSiblingDomNode(index);
+		}
 	}
 	return null;
 };
@@ -472,6 +484,52 @@ Widget.prototype.removeChildDomNodes = function() {
 			childWidget.removeChildDomNodes();
 		});
 	}
+};
+
+/*
+Invoke the action widgets that are descendents of the current widget.
+*/
+Widget.prototype.invokeActions = function(triggeringWidget,event) {
+	var handled = false;
+	// For each child widget
+	for(var t=0; t<this.children.length; t++) {
+		var child = this.children[t];
+		// Invoke the child if it is an action widget
+		if(child.invokeAction) {
+			child.refreshSelf();
+			if(child.invokeAction(triggeringWidget,event)) {
+				handled = true;
+			}
+		}
+		// Propagate through through the child if it permits it
+		if(child.allowActionPropagation() && child.invokeActions(triggeringWidget,event)) {
+			handled = true;
+		}
+	}
+	return handled;
+};
+
+/*
+Invoke the action widgets defined in a string
+*/
+Widget.prototype.invokeActionString = function(actions,triggeringWidget,event,variables) {
+	actions = actions || "";
+	var parser = this.wiki.parseText("text/vnd.tiddlywiki",actions,{
+			parentWidget: this,
+			document: this.document
+		}),
+		widgetNode = this.wiki.makeWidget(parser,{
+			parentWidget: this,
+			document: this.document,
+			variables: variables
+		});
+	var container = this.document.createElement("div");
+	widgetNode.render(container,null);
+	return widgetNode.invokeActions(this,event);
+};
+
+Widget.prototype.allowActionPropagation = function() {
+	return true;
 };
 
 exports.widget = Widget;

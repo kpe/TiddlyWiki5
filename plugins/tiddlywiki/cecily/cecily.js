@@ -34,7 +34,7 @@ CecilyStoryView.prototype.navigateTo = function(historyInfo) {
 	var listItemWidget = this.listWidget.children[listElementIndex],
 		targetElement = listItemWidget.findFirstDomNode();
 	// Scroll the node into view
-	this.listWidget.dispatchEvent({type: "tw-scroll", target: targetElement});
+	this.listWidget.dispatchEvent({type: "tm-scroll", target: targetElement});
 };
 
 CecilyStoryView.prototype.insert = function(widget) {
@@ -85,12 +85,12 @@ CecilyStoryView.prototype.loadMap = function() {
 	this.map = this.listWidget.wiki.getTiddlerData(this.getMapTiddlerTitle(),{
 		positions: {},
 		newTiddlerPosition: {x: 0, y: 0},
-		width: 660
+		width: parseInt(this.listWidget.getAttribute("cecily-width","600"),10)
 	});
 };
 
 CecilyStoryView.prototype.getMapTiddlerTitle = function() {
-	return this.listWidget.getAttribute("map","$:/TiddlerMap");
+	return this.listWidget.getAttribute("cecily-map","$:/TiddlerMap");
 };
 
 /*
@@ -102,7 +102,7 @@ CecilyStoryView.prototype.positionTiddler = function(title,domNode) {
 	$tw.utils.setStyle(domNode,[
 		{width: this.map.width + "px"},
 		{transformOrigin: "0% 0%"},
-		{transform: "translateX(" + pos.x + "px) translateY(" + pos.y + "px) scale(" + scale + ")"}
+		{transform: "translateX(" + pos.x + "px) translateY(" + pos.y + "px) scale(" + scale + ") translateX(-50%) rotate(" + (pos.r || 0) + "deg) translateX(50%)"}
 	]);
 };
 
@@ -113,7 +113,7 @@ CecilyStoryView.prototype.lookupTiddlerInMap = function(title,domNode) {
 	if(tiddler) {
 		var draftOf = tiddler.fields["draft.of"];
 		if(draftOf && this.map.positions[draftOf]) {
-			return this.map.positions[draftOf]
+			return this.map.positions[draftOf];
 		}
 	}
 	// Try looking the target tiddler up in the map

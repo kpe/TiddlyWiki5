@@ -36,12 +36,29 @@ BrowseWidget.prototype.render = function(parent,nextSibling) {
 	// Create element
 	var domNode = this.document.createElement("input");
 	domNode.setAttribute("type","file");
-	domNode.setAttribute("multiple","multiple");
+	if(this.browseMultiple) {
+		domNode.setAttribute("multiple","multiple");
+	}
+	if(this.tooltip) {
+		domNode.setAttribute("title",this.tooltip);
+	}
+	// Nw.js supports "nwsaveas" to force a "save as" dialogue that allows a new or existing file to be selected
+	if(this.nwsaveas) {
+		domNode.setAttribute("nwsaveas",this.nwsaveas);
+	}
+	// Nw.js supports "webkitdirectory" to allow a directory to be selected
+	if(this.webkitdirectory) {
+		domNode.setAttribute("webkitdirectory",this.webkitdirectory);
+	}
 	// Add a click event handler
 	domNode.addEventListener("change",function (event) {
-		self.wiki.readFiles(event.target.files,function(tiddlerFieldsArray) {
-			self.dispatchEvent({type: "tw-import-tiddlers", param: JSON.stringify(tiddlerFieldsArray)});
-		});
+		if(self.message) {
+			self.dispatchEvent({type: self.message, param: self.param, files: event.target.files});
+		} else {
+			self.wiki.readFiles(event.target.files,function(tiddlerFieldsArray) {
+				self.dispatchEvent({type: "tm-import-tiddlers", param: JSON.stringify(tiddlerFieldsArray)});
+			});
+		}
 		return false;
 	},false);
 	// Insert element
@@ -54,6 +71,12 @@ BrowseWidget.prototype.render = function(parent,nextSibling) {
 Compute the internal state of the widget
 */
 BrowseWidget.prototype.execute = function() {
+	this.browseMultiple = this.getAttribute("multiple");
+	this.message = this.getAttribute("message");
+	this.param = this.getAttribute("param");
+	this.tooltip = this.getAttribute("tooltip");
+	this.nwsaveas = this.getAttribute("nwsaveas");
+	this.webkitdirectory = this.getAttribute("webkitdirectory");
 };
 
 /*

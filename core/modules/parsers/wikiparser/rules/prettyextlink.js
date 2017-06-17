@@ -73,7 +73,7 @@ exports.parseLink = function(source,pos) {
 			tag: "a",
 			start: pos,
 			attributes: {
-				"class": {type: "string", value: "tw-tiddlylink-external"},
+				"class": {type: "string", value: "tc-tiddlylink-external"},
 			},
 			children: [textNode]
 		};
@@ -106,6 +106,7 @@ exports.parseLink = function(source,pos) {
 	}
 	node.attributes.href = {type: "string", value: URL};
 	node.attributes.target = {type: "string", value: "_blank"};
+	node.attributes.rel = {type: "string", value: "noopener noreferrer"};
 	// Update the end position
 	node.end = closePos + 2;
 	return node;

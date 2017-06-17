@@ -1,6 +1,7 @@
+caption: Images
 created: 20131205160221762
-modified: 20140416160234142
-tags: wikitext
+modified: 20160617100358365
+tags: WikiText [[Working with TiddlyWiki]]
 title: Images in WikiText
 type: text/vnd.tiddlywiki
 
@@ -12,6 +13,8 @@ Images can be included in WikiText with the following syntax:
 [img[Motovun Jack.jpg]]
 [img[http://tiddlywiki.com/favicon.ico]]
 ```
+
+You can also insert images from the editor toolbar. Click ''picture'' ({{$:/core/images/picture}}) and select a picture file.
 
 If the image source is the title of an image tiddler then that tiddler is directly displayed. Otherwise it is interpreted as a URL and an HTML `<img>` tag is generated with the `src` attribute containing the URL.
 
@@ -25,7 +28,7 @@ Attributes can be provided to specify CSS classes and the image width and height
 
 ```
 [img width=32 [Motovun Jack.jpg]]
-[img width=32 class="tw-image" [Motovun Jack.jpg]]
+[img width=32 class="tc-image" [Motovun Jack.jpg]]
 ```
 
 Note that attributes can be specified as transclusions or variable references:

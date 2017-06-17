@@ -12,12 +12,12 @@ Serve tiddlers over http
 /*global $tw: false */
 "use strict";
 
-if(!$tw.browser) {
+if($tw.node) {
 	var util = require("util"),
 		fs = require("fs"),
 		url = require("url"),
 		path = require("path"),
-		http = require("http");	
+		http = require("http");
 }
 
 exports.info = {
@@ -50,10 +50,22 @@ SimpleServer.prototype.addRoute = function(route) {
 };
 
 SimpleServer.prototype.findMatchingRoute = function(request,state) {
+	var pathprefix = this.get("pathprefix") || "";
 	for(var t=0; t<this.routes.length; t++) {
 		var potentialRoute = this.routes[t],
 			pathRegExp = potentialRoute.path,
-			match = potentialRoute.path.exec(state.urlInfo.pathname);
+			pathname = state.urlInfo.pathname,
+			match;
+		if(pathprefix) {
+			if(pathname.substr(0,pathprefix.length) === pathprefix) {
+				pathname = pathname.substr(pathprefix.length);
+				match = potentialRoute.path.exec(pathname);
+			} else {
+				match = false;
+			}
+		} else {
+			match = potentialRoute.path.exec(pathname);
+		}
 		if(match && request.method === potentialRoute.method) {
 			state.params = [];
 			for(var p=1; p<match.length; p++) {
@@ -66,7 +78,7 @@ SimpleServer.prototype.findMatchingRoute = function(request,state) {
 };
 
 SimpleServer.prototype.checkCredentials = function(request,incomingUsername,incomingPassword) {
-	var header = request.headers["authorization"] || "",
+	var header = request.headers.authorization || "",
 		token = header.split(/\s+/).pop() || "",
 		auth = $tw.utils.base64Decode(token),
 		parts = auth.split(/:/),
@@ -77,59 +89,61 @@ SimpleServer.prototype.checkCredentials = function(request,incomingUsername,inco
 	} else {
 		return "DENIED";
 	}
-}
+};
 
-SimpleServer.prototype.listen = function(port,host) {
+SimpleServer.prototype.requestHandler = function(request,response) {
+	// Compose the state object
 	var self = this;
-	http.createServer(function(request,response) {
-		// Compose the state object
-		var state = {};
-		state.wiki = self.wiki;
-		state.server = self;
-		state.urlInfo = url.parse(request.url);
-		// Find the route that matches this path
-		var route = self.findMatchingRoute(request,state);
-		// Check for the username and password if we've got one
-		var username = self.get("username"),
-			password = self.get("password");
-		if(username && password) {
-			// Check they match
-			if(self.checkCredentials(request,username,password) !== "ALLOWED") {
-				var servername = state.wiki.getTiddlerText("$:/SiteTitle") || "TiddlyWiki5";
-				response.writeHead(401,"Authentication required",{
-					"WWW-Authenticate": 'Basic realm="Please provide your username and password to login to ' + servername + '"'
-				});
-				response.end();
-				return;
-			}
-		}
-		// Return a 404 if we didn't find a route
-		if(!route) {
-			response.writeHead(404);
+	var state = {};
+	state.wiki = self.wiki;
+	state.server = self;
+	state.urlInfo = url.parse(request.url);
+	// Find the route that matches this path
+	var route = self.findMatchingRoute(request,state);
+	// Check for the username and password if we've got one
+	var username = self.get("username"),
+		password = self.get("password");
+	if(username && password) {
+		// Check they match
+		if(self.checkCredentials(request,username,password) !== "ALLOWED") {
+			var servername = state.wiki.getTiddlerText("$:/SiteTitle") || "TiddlyWiki5";
+			response.writeHead(401,"Authentication required",{
+				"WWW-Authenticate": 'Basic realm="Please provide your username and password to login to ' + servername + '"'
+			});
 			response.end();
 			return;
 		}
-		// Set the encoding for the incoming request
-		// TODO: Presumably this would need tweaking if we supported PUTting binary tiddlers
-		request.setEncoding("utf8");
-		// Dispatch the appropriate method
-		switch(request.method) {
-			case "GET": // Intentional fall-through
-			case "DELETE":
+	}
+	// Return a 404 if we didn't find a route
+	if(!route) {
+		response.writeHead(404);
+		response.end();
+		return;
+	}
+	// Set the encoding for the incoming request
+	// TODO: Presumably this would need tweaking if we supported PUTting binary tiddlers
+	request.setEncoding("utf8");
+	// Dispatch the appropriate method
+	switch(request.method) {
+		case "GET": // Intentional fall-through
+		case "DELETE":
+			route.handler(request,response,state);
+			break;
+		case "PUT":
+			var data = "";
+			request.on("data",function(chunk) {
+				data += chunk.toString();
+			});
+			request.on("end",function() {
+				state.data = data;
 				route.handler(request,response,state);
-				break;
-			case "PUT":
-				var data = "";
-				request.on("data",function(chunk) {
-					data += chunk.toString();
-				});
-				request.on("end",function() {
-					state.data = data;
-					route.handler(request,response,state);
-				});
-				break;
-		}
-	}).listen(port,host);
+			});
+			break;
+	}
+};
+	
+SimpleServer.prototype.listen = function(port,host) {
+	http.createServer(this.requestHandler.bind(this)).listen(port,host);
 };
 
 var Command = function(params,commander,callback) {
@@ -155,10 +169,10 @@ var Command = function(params,commander,callback) {
 				delete fields.fields;
 			}
 			// Remove any revision field
-			if(fields["revision"]) {
-				delete fields["revision"];
+			if(fields.revision) {
+				delete fields.revision;
 			}
-			state.wiki.addTiddler(new $tw.Tiddler(state.wiki.getCreationFields(),fields,{title: title}));
+			state.wiki.addTiddler(new $tw.Tiddler(state.wiki.getCreationFields(),fields,{title: title},state.wiki.getModificationFields()));
 			var changeCount = state.wiki.getChangeCount(title).toString();
 			response.writeHead(204, "OK",{
 				Etag: "\"default/" + encodeURIComponent(title) + "/" + changeCount + ":\"",
@@ -225,7 +239,7 @@ var Command = function(params,commander,callback) {
 						tiddlerFields[name] = tiddler.getFieldString(name);
 					}
 				});
-				tiddlerFields["revision"] = state.wiki.getChangeCount(title);
+				tiddlerFields.revision = state.wiki.getChangeCount(title);
 				tiddlerFields.type = tiddlerFields.type || "text/vnd.tiddlywiki";
 				tiddlers.push(tiddlerFields);
 			});
@@ -253,7 +267,7 @@ var Command = function(params,commander,callback) {
 						tiddlerFields.fields[name] = value;
 					}
 				});
-				tiddlerFields["revision"] = state.wiki.getChangeCount(title);
+				tiddlerFields.revision = state.wiki.getChangeCount(title);
 				tiddlerFields.type = tiddlerFields.type || "text/vnd.tiddlywiki";
 				response.writeHead(200, {"Content-Type": "application/json"});
 				response.end(JSON.stringify(tiddlerFields),"utf8");
@@ -266,23 +280,32 @@ var Command = function(params,commander,callback) {
 };
 
 Command.prototype.execute = function() {
+	if(!$tw.boot.wikiTiddlersPath) {
+		$tw.utils.warning("Warning: Wiki folder '" + $tw.boot.wikiPath + "' does not exist or is missing a tiddlywiki.info file");
+	}
 	var port = this.params[0] || "8080",
 		rootTiddler = this.params[1] || "$:/core/save/all",
 		renderType = this.params[2] || "text/plain",
 		serveType = this.params[3] || "text/html",
 		username = this.params[4],
 		password = this.params[5],
-		host = this.params[6] || "127.0.0.1";
+		host = this.params[6] || "127.0.0.1",
+		pathprefix = this.params[7];
 	this.server.set({
 		rootTiddler: rootTiddler,
 		renderType: renderType,
 		serveType: serveType,
 		username: username,
-		password: password
+		password: password,
+		pathprefix: pathprefix
 	});
 	this.server.listen(port,host);
 	console.log("Serving on " + host + ":" + port);
 	console.log("(press ctrl-C to exit)");
+	// Warn if required plugins are missing
+	if(!$tw.wiki.getTiddler("$:/plugins/tiddlywiki/tiddlyweb") || !$tw.wiki.getTiddler("$:/plugins/tiddlywiki/filesystem")) {
+		$tw.utils.warning("Warning: Plugins required for client-server operation (\"tiddlywiki/filesystem\" and \"tiddlywiki/tiddlyweb\") are missing from tiddlywiki.info file");
+	}
 	return null;
 };
 

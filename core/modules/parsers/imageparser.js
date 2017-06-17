@@ -19,11 +19,10 @@ var ImageParser = function(type,text,options) {
 			attributes: {}
 		},
 		src;
-	if(text) {
-		if(type === "application/pdf" || type === ".pdf") {
-			element.attributes.src = {type: "string", value: "data:application/pdf;base64," + text};
-			element.tag = "embed";
-		} else if(type === "image/svg+xml" || type === ".svg") {
+	if(options._canonical_uri) {
+		element.attributes.src = {type: "string", value: options._canonical_uri};
+	} else if(text) {
+		if(type === "image/svg+xml" || type === ".svg") {
 			element.attributes.src = {type: "string", value: "data:image/svg+xml," + encodeURIComponent(text)};
 		} else {
 			element.attributes.src = {type: "string", value: "data:" + type + ";base64," + text};
@@ -37,7 +36,6 @@ exports["image/jpg"] = ImageParser;
 exports["image/jpeg"] = ImageParser;
 exports["image/png"] = ImageParser;
 exports["image/gif"] = ImageParser;
-exports["application/pdf"] = ImageParser;
 exports["image/x-icon"] = ImageParser;
 
 })();

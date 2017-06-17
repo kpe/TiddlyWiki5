@@ -7,15 +7,15 @@
 				"title": "$:/plugins/tiddlywiki/highlight/highlight.js",
 				"module-type": "library"
 			},
-			"prefix": "var hljs;if($tw.browser){\n",
-			"suffix": "}\nexports.hljs = hljs;\n"
+			"prefix": "var hljs = require(\"$:/plugins/tiddlywiki/highlight/highlight.js\");\n",
+			"suffix": "\nexports.hljs = hljs;\n"
 		},
 		{
 			"file": "default.css",
 			"fields": {
 				"type": "text/css",
 				"title": "$:/plugins/tiddlywiki/highlight/highlight.css",
-				"tags": "[[$:/tags/stylesheet]]"
+				"tags": "[[$:/tags/Stylesheet]]"
 			}
 		}
 	]

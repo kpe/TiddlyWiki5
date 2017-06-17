@@ -27,25 +27,21 @@ exports.init = function(parser) {
 	this.matchRegExp = /\[\[(.*?)(?:\|(.*?))?\]\]/mg;
 };
 
-var isLinkExternal = function(to) {
-	var externalRegExp = /(?:file|http|https|mailto|ftp|irc|news|data|skype):[^\s<>{}\[\]`|'"\\^~]+(?:\/|\b)/i;
-	return externalRegExp.test(to);
-};
-
 exports.parse = function() {
 	// Move past the match
 	this.parser.pos = this.matchRegExp.lastIndex;
 	// Process the link
 	var text = this.match[1],
 		link = this.match[2] || text;
-	if(isLinkExternal(link)) {
+	if($tw.utils.isLinkExternal(link)) {
 		return [{
 			type: "element",
 			tag: "a",
 			attributes: {
 				href: {type: "string", value: link},
-				"class": {type: "string", value: "tw-tiddlylink-external"},
-				target: {type: "string", value: "_blank"}
+				"class": {type: "string", value: "tc-tiddlylink-external"},
+				target: {type: "string", value: "_blank"},
+				rel: {type: "string", value: "noopener noreferrer"}
 			},
 			children: [{
 				type: "text", text: text

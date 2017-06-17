@@ -72,21 +72,30 @@ exports["application/x-tiddler-html-div"] = function(text,fields) {
 };
 
 exports["application/json"] = function(text,fields) {
-	var tiddlers = JSON.parse(text),
-		result = [],
-		getKnownFields = function(tid) {
-			var fields = {};
-			"title text created creator modified modifier type tags".split(" ").forEach(function(value) {
-				if(tid[value] !== null) {
-					fields[value] = tid[value];
-				}
-			});
-			return fields;
-		};
-	for(var t=0; t<tiddlers.length; t++) {
-		result.push(getKnownFields(tiddlers[t]));
+	var incoming,
+		results = [];
+	try {
+		incoming = JSON.parse(text);
+	} catch(e) {
+		incoming = [{
+			title: "JSON error: " + e,
+			text: ""
+		}]
 	}
-	return result;
+	if(!$tw.utils.isArray(incoming)) {
+		incoming = [incoming];
+	}
+	for(var t=0; t<incoming.length; t++) {
+		var incomingFields = incoming[t],
+			fields = {};
+		for(var f in incomingFields) {
+			if(typeof incomingFields[f] === "string") {
+				fields[f] = incomingFields[f];
+			}
+		}
+		results.push(fields);
+	}
+	return results;
 };
 
 /*
@@ -109,7 +118,7 @@ exports["text/html"] = function(text,fields) {
 		if(sysMatch) {
 			results.push.apply(results,deserializeTiddlyWikiFile(text,systemAreaMarkerRegExp.lastIndex,!!sysMatch[1],fields));
 		}
-		return results
+		return results;
 	} else {
 		// Check whether we've got an encrypted file
 		var encryptedStoreArea = $tw.utils.extractEncryptedStoreArea(text);

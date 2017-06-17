@@ -6,9 +6,13 @@ alert-highlight: Surlignage pour les alertes
 alert-muted-foreground: Fond atténué pour les alertes
 background: Couleur de fond générale
 blockquote-bar: Barre de citation
+button-background: Fond du bouton par défaut
+button-border: Bordure du bouton par défaut
+button-foreground: Premier plan du bouton par défaut
 code-background: Fond pour le code
 code-border: Bordure pour le code
 code-foreground: Premier plan pour le code
+dirty-indicator: Indicateur de modifications non sauvegardées
 download-background: Fond pour le bouton de téléchargement
 download-foreground: Premier plan pour le bouton de téléchargement
 dragger-background: Fond pour le glissé-déposé
@@ -57,6 +61,7 @@ sidebar-tab-foreground-selected: Premier plan pour les onglets sélectionnés de
 sidebar-tab-foreground: Premier plan pour les onglets de la barre latérale
 sidebar-tiddler-link-foreground-hover: Premier plan au passage de la souris sur le lien d'un tiddler de la barre latérale
 sidebar-tiddler-link-foreground: Premier plan du lien d'un tiddler de la barre latérale
+site-title-foreground: Premier plan pour le titre du wiki (SiteTitle)
 static-alert-foreground: Premier plan pour les alertes statiques
 tab-background-selected: Fond pour les onglets sélectionnés
 tab-background: Fond pour les onglets

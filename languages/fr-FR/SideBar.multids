@@ -1,6 +1,7 @@
 title: $:/language/SideBar/
 
 All/Caption: Tout
+Contents/Caption: Sommaire
 Drafts/Caption: Brouillons
 Missing/Caption: Manquants
 More/Caption: Plus
@@ -10,6 +11,6 @@ Recent/Caption: Récents
 Shadows/Caption: Shadows
 System/Caption: Système
 Tags/Caption: Tags
-Tags/Untagged/Caption: sans étiquette
+Tags/Untagged/Caption: sans tag
 Tools/Caption: Outils
 Types/Caption: Types

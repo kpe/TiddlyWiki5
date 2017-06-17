@@ -30,10 +30,31 @@ var Commander = function(commandTokens,callback,wiki,streams) {
 };
 
 /*
+Log a string if verbose flag is set
+*/
+Commander.prototype.log = function(str) {
+	if(this.verbose) {
+		this.streams.output.write(str + "\n");
+	}
+};
+
+/*
+Write a string if verbose flag is set
+*/
+Commander.prototype.write = function(str) {
+	if(this.verbose) {
+		this.streams.output.write(str);
+	}
+};
+
+/*
 Add a string of tokens to the command queue
 */
 Commander.prototype.addCommandTokens = function(commandTokens) {
-	Array.prototype.push.apply(this.commandTokens,commandTokens);
+	var params = commandTokens.slice(0);
+	params.unshift(0);
+	params.unshift(this.nextToken);
+	Array.prototype.splice.apply(this.commandTokens,params);
 };
 
 /*
@@ -55,7 +76,7 @@ Commander.prototype.executeNextCommand = function() {
 		// Get and check the command token
 		var commandName = this.commandTokens[this.nextToken++];
 		if(commandName.substr(0,2) !== "--") {
-			this.callback("Missing command");
+			this.callback("Missing command: " + commandName);
 		} else {
 			commandName = commandName.substr(2); // Trim off the --
 			// Accumulate the parameters to the command

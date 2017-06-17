@@ -19,11 +19,12 @@ exports.after = ["story"];
 exports.synchronous = true;
 
 // Default story and history lists
-var PAGE_TITLE_TITLE = "$:/core/wiki/title"
+var PAGE_TITLE_TITLE = "$:/core/wiki/title";
 var PAGE_STYLESHEET_TITLE = "$:/core/ui/PageStylesheet";
-var PAGE_TEMPLATE_TITLE = "$:/core/ui/PageMacros";
+var PAGE_TEMPLATE_TITLE = "$:/core/ui/PageTemplate";
 
 // Time (in ms) that we defer refreshing changes to draft tiddlers
+var DRAFT_TIDDLER_TIMEOUT_TITLE = "$:/config/Drafts/TypingTimeout";
 var DRAFT_TIDDLER_TIMEOUT = 400;
 
 exports.startup = function() {
@@ -49,11 +50,11 @@ exports.startup = function() {
 			$tw.styleElement.innerHTML = $tw.styleContainer.textContent;
 		}
 	}));
-	// Display the $:/core/ui/PageMacros tiddler to kick off the display
+	// Display the $:/core/ui/PageTemplate tiddler to kick off the display
 	$tw.perf.report("mainRender",function() {
 		$tw.pageWidgetNode = $tw.wiki.makeTranscludeWidget(PAGE_TEMPLATE_TITLE,{document: document, parentWidget: $tw.rootWidget});
 		$tw.pageContainer = document.createElement("div");
-		$tw.utils.addClass($tw.pageContainer,"tw-page-container-wrapper");
+		$tw.utils.addClass($tw.pageContainer,"tc-page-container-wrapper");
 		document.body.insertBefore($tw.pageContainer,document.body.firstChild);
 		$tw.pageWidgetNode.render($tw.pageContainer,null);
 	})();
@@ -62,7 +63,7 @@ exports.startup = function() {
 		timerId;
 	function refresh() {
 		// Process the refresh
-		$tw.pageWidgetNode.refresh(deferredChanges,$tw.pageContainer,null);
+		$tw.pageWidgetNode.refresh(deferredChanges);
 		deferredChanges = Object.create(null);
 	}
 	// Add the change event handler
@@ -81,7 +82,11 @@ exports.startup = function() {
 		}
 		timerId = null;
 		if(onlyDraftsHaveChanged) {
-			timerId = setTimeout(refresh,DRAFT_TIDDLER_TIMEOUT);
+			var timeout = parseInt($tw.wiki.getTiddlerText(DRAFT_TIDDLER_TIMEOUT_TITLE,""),10);
+			if(isNaN(timeout)) {
+				timeout = DRAFT_TIDDLER_TIMEOUT;
+			}
+			timerId = setTimeout(refresh,timeout);
 			$tw.utils.extend(deferredChanges,changes);
 		} else {
 			$tw.utils.extend(deferredChanges,changes);

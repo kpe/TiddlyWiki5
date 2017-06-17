@@ -13,9 +13,19 @@ The HTML parser displays text as raw HTML
 "use strict";
 
 var HtmlParser = function(type,text,options) {
+	var src;
+	if(options._canonical_uri) {
+		src = options._canonical_uri;
+	} else if(text) {
+		src = "data:text/html;charset=utf-8," + encodeURIComponent(text);
+	}
 	this.tree = [{
-		type: "raw",
-		html: text
+		type: "element",
+		tag: "iframe",
+		attributes: {
+			src: {type: "string", value: src},
+			sandbox: {type: "string", value: ""}
+		}
 	}];
 };
 

@@ -34,25 +34,42 @@ ButtonWidget.prototype.render = function(parent,nextSibling) {
 	this.computeAttributes();
 	this.execute();
 	// Create element
-	var domNode = this.document.createElement("button");
+	var tag = "button";
+	if(this.buttonTag && $tw.config.htmlUnsafeElements.indexOf(this.buttonTag) === -1) {
+		tag = this.buttonTag;
+	}
+	var domNode = this.document.createElement(tag);
 	// Assign classes
-	var classes = this["class"].split(" ") || [];
+	var classes = this["class"].split(" ") || [],
+		isPoppedUp = this.popup && this.isPoppedUp();
 	if(this.selectedClass) {
 		if(this.set && this.setTo && this.isSelected()) {
 			$tw.utils.pushTop(classes,this.selectedClass.split(" "));
 		}
-		if(this.popup && this.isPoppedUp()) {
+		if(isPoppedUp) {
 			$tw.utils.pushTop(classes,this.selectedClass.split(" "));
 		}
 	}
+	if(isPoppedUp) {
+		$tw.utils.pushTop(classes,"tc-popup-handle");
+	}
 	domNode.className = classes.join(" ");
-	// Assign classes
+	// Assign other attributes
 	if(this.style) {
 		domNode.setAttribute("style",this.style);
+	}
+	if(this.tooltip) {
+		domNode.setAttribute("title",this.tooltip);
+	}
+	if(this["aria-label"]) {
+		domNode.setAttribute("aria-label",this["aria-label"]);
 	}
 	// Add a click event handler
 	domNode.addEventListener("click",function (event) {
 		var handled = false;
+		if(self.invokeActions(this,event)) {
+			handled = true;
+		}
 		if(self.to) {
 			self.navigateTo(event);
 			handled = true;
@@ -69,44 +86,67 @@ ButtonWidget.prototype.render = function(parent,nextSibling) {
 			self.setTiddler();
 			handled = true;
 		}
+		if(self.actions) {
+			self.invokeActionString(self.actions,self,event);
+		}
 		if(handled) {
 			event.preventDefault();
 			event.stopPropagation();
 		}
 		return handled;
 	},false);
+	// Make it draggable if required
+	if(this.dragTiddler || this.dragFilter) {
+		$tw.utils.makeDraggable({
+			domNode: domNode,
+			dragTiddlerFn: function() {return self.dragTiddler;},
+			dragFilterFn: function() {return self.dragFilter;},
+			widget: this
+		});
+	}
 	// Insert element
 	parent.insertBefore(domNode,nextSibling);
 	this.renderChildren(domNode,null);
 	this.domNodes.push(domNode);
 };
 
+/*
+We don't allow actions to propagate because we trigger actions ourselves
+*/
+ButtonWidget.prototype.allowActionPropagation = function() {
+	return false;
+};
+
+ButtonWidget.prototype.getBoundingClientRect = function() {
+	return this.domNodes[0].getBoundingClientRect();
+};
+
 ButtonWidget.prototype.isSelected = function() {
-	var tiddler = this.wiki.getTiddler(this.set);
-	return tiddler ? tiddler.fields.text === this.setTo : this.defaultSetValue === this.setTo;
+    return this.wiki.getTextReference(this.set,this.defaultSetValue,this.getVariable("currentTiddler")) === this.setTo;
 };
 
 ButtonWidget.prototype.isPoppedUp = function() {
 	var tiddler = this.wiki.getTiddler(this.popup);
-	var result = tiddler && tiddler.fields.text ? $tw.popup.readPopupState(this.popup,tiddler.fields.text) : false;
+	var result = tiddler && tiddler.fields.text ? $tw.popup.readPopupState(tiddler.fields.text) : false;
 	return result;
 };
 
 ButtonWidget.prototype.navigateTo = function(event) {
-	var bounds = this.domNodes[0].getBoundingClientRect();
+	var bounds = this.getBoundingClientRect();
 	this.dispatchEvent({
-		type: "tw-navigate",
+		type: "tm-navigate",
 		navigateTo: this.to,
 		navigateFromTitle: this.getVariable("storyTiddler"),
 		navigateFromNode: this,
 		navigateFromClientRect: { top: bounds.top, left: bounds.left, width: bounds.width, right: bounds.right, bottom: bounds.bottom, height: bounds.height
 		},
-		navigateSuppressNavigation: event.metaKey || event.ctrlKey || (event.button === 1)
+		navigateSuppressNavigation: event.metaKey || event.ctrlKey || (event.button === 1),
+		event: event
 	});
 };
 
 ButtonWidget.prototype.dispatchMessage = function(event) {
-	this.dispatchEvent({type: this.message, param: this.param, tiddlerTitle: this.getVariable("currentTiddler")});
+	this.dispatchEvent({type: this.message, param: this.param, tiddlerTitle: this.getVariable("currentTiddler"), event: event});
 };
 
 ButtonWidget.prototype.triggerPopup = function(event) {
@@ -126,6 +166,7 @@ Compute the internal state of the widget
 */
 ButtonWidget.prototype.execute = function() {
 	// Get attributes
+	this.actions = this.getAttribute("actions");
 	this.to = this.getAttribute("to");
 	this.message = this.getAttribute("message");
 	this.param = this.getAttribute("param");
@@ -134,9 +175,14 @@ ButtonWidget.prototype.execute = function() {
 	this.popup = this.getAttribute("popup");
 	this.hover = this.getAttribute("hover");
 	this["class"] = this.getAttribute("class","");
+	this["aria-label"] = this.getAttribute("aria-label");
+	this.tooltip = this.getAttribute("tooltip");
 	this.style = this.getAttribute("style");
 	this.selectedClass = this.getAttribute("selectedClass");
-	this.defaultSetValue = this.getAttribute("default");
+	this.defaultSetValue = this.getAttribute("default","");
+	this.buttonTag = this.getAttribute("tag");
+	this.dragTiddler = this.getAttribute("dragTiddler");
+	this.dragFilter = this.getAttribute("dragFilter");
 	// Make child widgets
 	this.makeChildWidgets();
 };
@@ -146,7 +192,7 @@ Selectively refreshes the widget if needed. Returns true if the widget or any of
 */
 ButtonWidget.prototype.refresh = function(changedTiddlers) {
 	var changedAttributes = this.computeAttributes();
-	if(changedAttributes.to || changedAttributes.message || changedAttributes.param || changedAttributes.set || changedAttributes.setTo || changedAttributes.popup || changedAttributes.hover || changedAttributes["class"] || changedAttributes.selectedClass || changedAttributes.style || (this.set && changedTiddlers[this.set]) || (this.popup && changedTiddlers[this.popup])) {
+	if(changedAttributes.to || changedAttributes.message || changedAttributes.param || changedAttributes.set || changedAttributes.setTo || changedAttributes.popup || changedAttributes.hover || changedAttributes["class"] || changedAttributes.selectedClass || changedAttributes.style || changedAttributes.dragFilter || changedAttributes.dragTiddler || (this.set && changedTiddlers[this.set]) || (this.popup && changedTiddlers[this.popup])) {
 		this.refreshSelf();
 		return true;
 	}

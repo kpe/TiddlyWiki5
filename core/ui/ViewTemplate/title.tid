@@ -4,29 +4,36 @@ tags: $:/tags/ViewTemplate
 \define title-styles()
 fill:$(foregroundColor)$;
 \end
-<div class="tw-tiddler-title">
-<div class="titlebar">
-<span class="tw-tiddler-controls">
-<$list filter="[all[shadows+tiddlers]tag[$:/tags/ViewToolbar]!has[draft.of]]" variable="listItem"><$transclude tiddler=<<listItem>>/></$list>
+\define config-title()
+$:/config/ViewToolbarButtons/Visibility/$(listItem)$
+\end
+<div class="tc-tiddler-title">
+<div class="tc-titlebar">
+<span class="tc-tiddler-controls">
+<$list filter="[all[shadows+tiddlers]tag[$:/tags/ViewToolbar]!has[draft.of]]" variable="listItem"><$reveal type="nomatch" state=<<config-title>> text="hide"><$transclude tiddler=<<listItem>>/></$reveal></$list>
 </span>
+<$set name="tv-wikilinks" value={{$:/config/Tiddlers/TitleLinks}}>
+<$link>
 <$set name="foregroundColor" value={{!!color}}>
-<span style=<<title-styles>>>
+<span class="tc-tiddler-title-icon" style=<<title-styles>>>
 <$transclude tiddler={{!!icon}}/>
 </span>
 </$set>
 <$list filter="[all[current]removeprefix[$:/]]">
-<span class="title" title={{$:/language/SystemTiddler/Tooltip}}>
-<span class="tw-system-title-prefix">$:/</span><$text text=<<currentTiddler>>/>
-</span>
+<h2 class="tc-title" title={{$:/language/SystemTiddler/Tooltip}}>
+<span class="tc-system-title-prefix">$:/</span><$text text=<<currentTiddler>>/>
+</h2>
 </$list>
 <$list filter="[all[current]!prefix[$:/]]">
-<span class="title">
+<h2 class="tc-title">
 <$view field="title"/>
-</span>
+</h2>
 </$list>
+</$link>
+</$set>
 </div>
 
-<$reveal type="nomatch" text="" default="" state=<<tiddlerInfoState>> class="tw-tiddler-info tw-popup" animate="yes" retain="yes">
+<$reveal type="nomatch" text="" default="" state=<<tiddlerInfoState>> class="tc-tiddler-info tc-popup-handle" animate="yes" retain="yes">
 
 <$transclude tiddler="$:/core/ui/TiddlerInfo"/>
 

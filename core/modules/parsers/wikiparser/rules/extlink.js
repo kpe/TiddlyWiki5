@@ -26,7 +26,7 @@ exports.types = {inline: true};
 exports.init = function(parser) {
 	this.parser = parser;
 	// Regexp to match
-	this.matchRegExp = /~?(?:file|http|https|mailto|ftp|irc|news|data|skype):[^\s<>{}\[\]`|'"\\^~]+(?:\/|\b)/mg;
+	this.matchRegExp = /~?(?:file|http|https|mailto|ftp|irc|news|data|skype):[^\s<>{}\[\]`|"\\^]+(?:\/|\b)/mg;
 };
 
 exports.parse = function() {
@@ -41,8 +41,9 @@ exports.parse = function() {
 			tag: "a",
 			attributes: {
 				href: {type: "string", value: this.match[0]},
-				"class": {type: "string", value: "tw-tiddlylink-external"},
-				target: {type: "string", value: "_blank"}
+				"class": {type: "string", value: "tc-tiddlylink-external"},
+				target: {type: "string", value: "_blank"},
+				rel: {type: "string", value: "noopener noreferrer"}
 			},
 			children: [{
 				type: "text", text: this.match[0]

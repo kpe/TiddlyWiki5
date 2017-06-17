@@ -1,9 +1,10 @@
 {
+	"description": "Server configuration of the tw5.com edition",
 	"plugins": [
 		"tiddlywiki/tiddlyweb",
 		"tiddlywiki/filesystem",
-		"tiddlywiki/codemirror",
-		"tiddlywiki/highlight"
+		"tiddlywiki/highlight",
+		"tiddlywiki/mobiledragdrop"
 	],
 	"themes": [
 		"tiddlywiki/vanilla",
@@ -11,5 +12,8 @@
 	],
 	"includeWikis": [
 		"../tw5.com"
-	]
+	],
+	"config": {
+		"default-tiddler-location": "../tw5.com/tiddlers"
+	}
 }

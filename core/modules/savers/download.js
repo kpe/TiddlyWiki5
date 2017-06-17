@@ -18,16 +18,21 @@ Select the appropriate saver module and set it up
 var DownloadSaver = function(wiki) {
 };
 
-DownloadSaver.prototype.save = function(text,method,callback) {
+DownloadSaver.prototype.save = function(text,method,callback,options) {
+	options = options || {};
 	// Get the current filename
-	var filename = "tiddlywiki.html",
-		p = document.location.pathname.lastIndexOf("/");
-	if(p !== -1) {
-		filename = document.location.pathname.substr(p+1);
+	var filename = options.variables.filename;
+	if(!filename) {
+		var p = document.location.pathname.lastIndexOf("/");
+		if(p !== -1) {
+			filename = document.location.pathname.substr(p+1);
+		}
+	}
+	if(!filename) {
+		filename = "tiddlywiki.html";
 	}
 	// Set up the link
 	var link = document.createElement("a");
-	link.setAttribute("target","_blank");
 	if(Blob !== undefined) {
 		var blob = new Blob([text], {type: "text/html"});
 		link.setAttribute("href", URL.createObjectURL(blob));
@@ -38,6 +43,8 @@ DownloadSaver.prototype.save = function(text,method,callback) {
 	document.body.appendChild(link);
 	link.click();
 	document.body.removeChild(link);
+	// Callback that we succeeded
+	callback(null);
 	return true;
 };
 
@@ -46,9 +53,18 @@ Information about this saver
 */
 DownloadSaver.prototype.info = {
 	name: "download",
-	priority: 100,
-	capabilities: ["save", "download"]
+	priority: 100
 };
+
+Object.defineProperty(DownloadSaver.prototype.info, "capabilities", {
+	get: function() {
+		var capabilities = ["save", "download"];
+		if(($tw.wiki.getTextReference("$:/config/DownloadSaver/AutoSave") || "").toLowerCase() === "yes") {
+			capabilities.push("autosave");
+		}
+		return capabilities;
+	}
+});
 
 /*
 Static method that returns true if this saver is capable of working

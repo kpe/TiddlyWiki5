@@ -1,8 +1,16 @@
 title: $:/core/ui/PageTemplate
 
 \define containerClasses()
-tw-page-container tw-page-view-$(themeTitle)$ tw-language-$(languageTitle)$
+tc-page-container tc-page-view-$(themeTitle)$ tc-language-$(languageTitle)$
 \end
+
+<$importvariables filter="[[$:/core/ui/PageMacros]] [all[shadows+tiddlers]tag[$:/tags/Macro]!has[draft.of]]">
+
+<$set name="tv-config-toolbar-icons" value={{$:/config/Toolbar/Icons}}>
+
+<$set name="tv-config-toolbar-text" value={{$:/config/Toolbar/Text}}>
+
+<$set name="tv-config-toolbar-class" value={{$:/config/Toolbar/ButtonClass}}>
 
 <$set name="themeTitle" value={{$:/view}}>
 
@@ -14,7 +22,7 @@ tw-page-container tw-page-view-$(themeTitle)$ tw-language-$(languageTitle)$
 
 <div class=<<containerClasses>>>
 
-<$navigator story="$:/StoryList" history="$:/HistoryList">
+<$navigator story="$:/StoryList" history="$:/HistoryList" openLinkFromInsideRiver={{$:/config/Navigation/openLinkFromInsideRiver}} openLinkFromOutsideRiver={{$:/config/Navigation/openLinkFromOutsideRiver}} relinkOnRename={{$:/config/RelinkOnRename}}>
 
 <$dropzone>
 
@@ -37,3 +45,11 @@ tw-page-container tw-page-view-$(themeTitle)$ tw-language-$(languageTitle)$
 </$set>
 
 </$set>
+
+</$set>
+
+</$set>
+
+</$set>
+
+</$importvariables>

@@ -18,12 +18,14 @@ wiki: wiki store to be used
 pluginType: type of plugin to be switched
 controllerTitle: title of tiddler used to control switching of this resource
 defaultPlugins: array of default plugins to be used if nominated plugin isn't found
+onSwitch: callback when plugin is switched (single parameter is array of plugin titles)
 */
 function PluginSwitcher(options) {
 	this.wiki = options.wiki;
 	this.pluginType = options.pluginType;
 	this.controllerTitle = options.controllerTitle;
 	this.defaultPlugins = options.defaultPlugins || [];
+	this.onSwitch = options.onSwitch;
 	// Switch to the current plugin
 	this.switchPlugins();
 	// Listen for changes to the selected plugin
@@ -60,29 +62,14 @@ PluginSwitcher.prototype.switchPlugins = function() {
 	accumulatePlugin(selectedPluginTitle);
 	// Unregister any existing theme tiddlers
 	var unregisteredTiddlers = $tw.wiki.unregisterPluginTiddlers(this.pluginType);
-	// Accumulate the titles of shadow tiddlers that have changed as a result of this switch
-	var changedTiddlers = {};
-	this.wiki.eachShadow(function(tiddler,title) {
-		var source = self.wiki.getShadowSource(title);
-		if(unregisteredTiddlers.indexOf(source) !== -1) {
-			changedTiddlers[title] = true; // isDeleted?
-		}
-	});
 	// Register any new theme tiddlers
 	var registeredTiddlers = $tw.wiki.registerPluginTiddlers(this.pluginType,plugins);
 	// Unpack the current theme tiddlers
 	$tw.wiki.unpackPluginTiddlers();
-	// Accumulate the affected shadow tiddlers
-	this.wiki.eachShadow(function(tiddler,title) {
-		var source = self.wiki.getShadowSource(title);
-		if(registeredTiddlers.indexOf(source) !== -1) {
-			changedTiddlers[title] = false; // isDeleted?
-		}
-	});
-	// Issue change events for the modified tiddlers
-	$tw.utils.each(changedTiddlers,function(status,title) {
-		self.wiki.enqueueTiddlerEvent(title,status);
-	});
+	// Call the switch handler
+	if(this.onSwitch) {
+		this.onSwitch(plugins);
+	}
 };
 
 exports.PluginSwitcher = PluginSwitcher;

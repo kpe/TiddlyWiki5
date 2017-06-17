@@ -1,6 +1,6 @@
 {
+	"description": "TiddlyWiki Common-JS tests",
 	"plugins": [
-		"tiddlywiki/fullscreen"
 	],
 	"themes": [
 		"tiddlywiki/vanilla",

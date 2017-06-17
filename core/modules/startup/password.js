@@ -15,16 +15,17 @@ Password handling
 // Export name and synchronous status
 exports.name = "password";
 exports.platforms = ["browser"];
-exports.after = ["rootwidget"];
+exports.after = ["startup"];
 exports.synchronous = true;
 
 exports.startup = function() {
-	$tw.rootWidget.addEventListener("tw-set-password",function(event) {
+	$tw.rootWidget.addEventListener("tm-set-password",function(event) {
 		$tw.passwordPrompt.createPrompt({
-			serviceName: "Set a new password for this TiddlyWiki",
+			serviceName: $tw.language.getString("Encryption/PromptSetPassword"),
 			noUserName: true,
-			submitText: "Set password",
+			submitText: $tw.language.getString("Encryption/SetPassword"),
 			canCancel: true,
+			repeatPassword: true,
 			callback: function(data) {
 				if(data) {
 					$tw.crypto.setPassword(data.password);
@@ -33,7 +34,12 @@ exports.startup = function() {
 			}
 		});
 	});
-	$tw.rootWidget.addEventListener("tw-clear-password",function(event) {
+	$tw.rootWidget.addEventListener("tm-clear-password",function(event) {
+		if($tw.browser) {
+			if(!confirm($tw.language.getString("Encryption/ConfirmClearPassword"))) {
+				return;
+			}
+		}
 		$tw.crypto.setPassword(null);
 	});
 	// Ensure that $:/isEncrypted is maintained properly

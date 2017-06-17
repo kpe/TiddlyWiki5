@@ -13,14 +13,14 @@ Adds tiddler filtering methods to the $tw.Wiki object.
 "use strict";
 
 /*
-Parses an operation within a filter string
-	results: Array of array of operator nodes into which results should be inserted
+Parses an operation (i.e. a run) within a filter string
+	operators: Array of array of operator nodes into which results should be inserted
 	filterString: filter string
 	p: start position within the string
 Returns the new start position, after the parsed operation
 */
 function parseFilterOperation(operators,filterString,p) {
-	var operator, operand, bracketPos, curlyBracketPos;
+	var nextBracketPos, operator;
 	// Skip the starting square bracket
 	if(filterString.charAt(p++) !== "[") {
 		throw "Missing [ in filter expression";
@@ -33,14 +33,14 @@ function parseFilterOperation(operators,filterString,p) {
 			operator.prefix = filterString.charAt(p++);
 		}
 		// Get the operator name
-		var nextBracketPos = filterString.substring(p).search(/[\[\{\/]/);
+		nextBracketPos = filterString.substring(p).search(/[\[\{<\/]/);
 		if(nextBracketPos === -1) {
 			throw "Missing [ in filter expression";
 		}
 		nextBracketPos += p;
 		var bracket = filterString.charAt(nextBracketPos);
 		operator.operator = filterString.substring(p,nextBracketPos);
-		
+
 		// Any suffix?
 		var colon = operator.operator.indexOf(':');
 		if(colon > -1) {
@@ -54,26 +54,32 @@ function parseFilterOperation(operators,filterString,p) {
 
 		p = nextBracketPos + 1;
 		switch (bracket) {
-		case '{': // Curly brackets
-			operator.indirect = true;
-			nextBracketPos = filterString.indexOf('}',p);
-			break;
-		case '[': // Square brackets
-			nextBracketPos = filterString.indexOf(']',p);
-			break;
-		case '/': // regexp brackets
-			var rex = /^((?:[^\\\/]*|\\.)*)\/(?:\(([mygi]+)\))?/g,
-				rexMatch = rex.exec(filterString.substring(p));
-			if(rexMatch) {
-				operator.regexp = new RegExp(rexMatch[1], rexMatch[2]);
-				nextBracketPos = p + rex.lastIndex - 1;
-			}
-			else {
-				throw "Unterminated regular expression in filter expression";
-			}
-			break;
+			case "{": // Curly brackets
+				operator.indirect = true;
+				nextBracketPos = filterString.indexOf("}",p);
+				break;
+			case "[": // Square brackets
+				nextBracketPos = filterString.indexOf("]",p);
+				break;
+			case "<": // Angle brackets
+				operator.variable = true;
+				nextBracketPos = filterString.indexOf(">",p);
+				break;
+			case "/": // regexp brackets
+				var rex = /^((?:[^\\\/]*|\\.)*)\/(?:\(([mygi]+)\))?/g,
+					rexMatch = rex.exec(filterString.substring(p));
+				if(rexMatch) {
+					operator.regexp = new RegExp(rexMatch[1], rexMatch[2]);
+// DEPRECATION WARNING
+console.log("WARNING: Filter",operator.operator,"has a deprecated regexp operand",operator.regexp);
+					nextBracketPos = p + rex.lastIndex - 1;
+				}
+				else {
+					throw "Unterminated regular expression in filter expression";
+				}
+				break;
 		}
-		
+
 		if(nextBracketPos === -1) {
 			throw "Missing closing bracket in filter expression";
 		}
@@ -81,7 +87,7 @@ function parseFilterOperation(operators,filterString,p) {
 			operator.operand = filterString.substring(p,nextBracketPos);
 		}
 		p = nextBracketPos + 1;
-			
+
 		// Push this operator
 		operators.push(operator);
 	} while(filterString.charAt(p) !== "]");
@@ -102,7 +108,7 @@ exports.parseFilter = function(filterString) {
 		p = 0, // Current position in the filter string
 		match;
 	var whitespaceRegExp = /(\s+)/mg,
-		operandRegExp = /((?:\+|\-)?)(?:(\[)|("(?:[^"])*")|('(?:[^'])*')|([^\s\[\]]+))/mg;
+		operandRegExp = /((?:\+|\-)?)(?:(\[)|(?:"([^"]*)")|(?:'([^']*)')|([^\s\[\]]+))/mg;
 	while(p < filterString.length) {
 		// Skip any whitespace
 		whitespaceRegExp.lastIndex = p;
@@ -115,7 +121,7 @@ exports.parseFilter = function(filterString) {
 			operandRegExp.lastIndex = p;
 			match = operandRegExp.exec(filterString);
 			if(!match || match.index !== p) {
-				throw "Syntax error in filter expression";
+				throw $tw.language.getString("Error/FilterSyntax");
 			}
 			var operation = {
 				prefix: "",
@@ -165,7 +171,7 @@ exports.compileFilter = function(filterString) {
 		filterParseTree = this.parseFilter(filterString);
 	} catch(e) {
 		return function(source,widget) {
-			return ["Filter error: " + e];
+			return [$tw.language.getString("Error/Filter") + ": " + e];
 		};
 	}
 	// Get the hashmap of filter operator functions
@@ -193,6 +199,10 @@ exports.compileFilter = function(filterString) {
 				if(operator.indirect) {
 					operand = self.getTextReference(operator.operand,"",currTiddlerTitle);
 				}
+				if(operator.variable) {
+					operand = widget.getVariable(operator.operand,{defaultValue: ""});
+				}
+				// Invoke the appropriate filteroperator module
 				results = operatorFunction(accumulator,{
 							operator: operator.operator,
 							operand: operand,

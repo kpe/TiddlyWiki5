@@ -1,6 +1,8 @@
 {
 	"title": "$:/plugins/tiddlywiki/googleanalytics",
-	"description": "Google Analytics plugin for TiddlyWiki5",
+	"description": "Google Analytics: website statistics",
 	"author": "JeremyRuston",
-	"core-version": ">=5.0.0"
+	"contributor": "Sylvain Comte",
+	"core-version": ">=5.0.0",
+	"list": "readme settings usage"
 }

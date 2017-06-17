@@ -1,12 +1,20 @@
 title: $:/language/Search/
 
+DefaultResults/Caption: Liste
 Filter/Caption: Filter
-Filter/Hint: Suche mit [["filter expression"|http://tiddlywiki.com/static/TiddlerFilters.html]].
-Filter/Matches: //<small><$count filter="[!is[system]search{$:/temp/search}]"/> Treffer</small>//
-Matches: //<small><$count filter="[!is[system]search{$:/temp/search}]"/> Treffer</small>//
+Filter/Hint: Suche mit [["filter expression"|http://tiddlywiki.com/static/Filters.html]].
+Filter/Matches: //<small><<resultCount>> Treffer</small>//
+Matches: //<small><<resultCount>> Treffer</small>//
+Matches/All: Alle Treffer:
+Matches/Title: Titel Treffer:
+Search: Suchen
+Search/TooShort: Suchtext ist zu kurz
 Shadows/Caption: Schatten
-Shadows/Hint: Suche in ~Schatten-Tiddler.
-Shadows/Matches: //<small><$count filter="[all[shadows]search{$:/temp/advancedsearch}]"/> Treffer</small>//
+Shadows/Hint: Suche in Schatten-Tiddlern.
+Shadows/Matches: //<small><<resultCount>> Treffer</small>//
+Standard/Caption: Standard
+Standard/Hint: Suche in Standard-Tiddlern.
+Standard/Matches: //<small><<resultCount>> matches</small>//
 System/Caption: System
-System/Hint: Suche in ~System-Tiddler.
-System/Matches: //<small><$count filter="[is[system]search{$:/temp/advancedsearch}]"/> matches</small>//
+System/Hint: Suche in System-Tiddlern.
+System/Matches: //<small><<resultCount>> Treffer</small>//

@@ -19,12 +19,18 @@ var bumpSequenceNumber = function(object) {
 	if(sequenceNumber !== null) {
 		object.sequenceNumber = sequenceNumber++;
 	}
-}
+};
 
 var TW_TextNode = function(text) {
 	bumpSequenceNumber(this);
-	this.textContent = text;
+	this.textContent = text + "";
 };
+
+Object.defineProperty(TW_TextNode.prototype, "nodeType", {
+	get: function() {
+		return 3;
+	}
+});
 
 Object.defineProperty(TW_TextNode.prototype, "formattedTextContent", {
 	get: function() {
@@ -39,14 +45,28 @@ var TW_Element = function(tag,namespace) {
 	this.attributes = {};
 	this.isRaw = false;
 	this.children = [];
+	this.style = {};
 	this.namespaceURI = namespace || "http://www.w3.org/1999/xhtml";
+};
+
+Object.defineProperty(TW_Element.prototype, "nodeType", {
+	get: function() {
+		return 1;
+	}
+});
+
+TW_Element.prototype.getAttribute = function(name) {
+	if(this.isRaw) {
+		throw "Cannot getAttribute on a raw TW_Element";
+	}
+	return this.attributes[name];
 };
 
 TW_Element.prototype.setAttribute = function(name,value) {
 	if(this.isRaw) {
 		throw "Cannot setAttribute on a raw TW_Element";
 	}
-	this.attributes[name] = value;
+	this.attributes[name] = value + "";
 };
 
 TW_Element.prototype.setAttributeNS = function(namespace,name,value) {
@@ -79,7 +99,7 @@ TW_Element.prototype.insertBefore = function(node,nextSibling) {
 	} else {
 		this.appendChild(node);
 	}
-}
+};
 
 TW_Element.prototype.removeChild = function(node) {
 	var p = this.children.indexOf(node);
@@ -92,36 +112,48 @@ TW_Element.prototype.hasChildNodes = function() {
 	return !!this.children.length;
 };
 
+Object.defineProperty(TW_Element.prototype, "childNodes", {
+	get: function() {
+		return this.children;
+	}
+});
+
 Object.defineProperty(TW_Element.prototype, "firstChild", {
-    get: function() {
-    	return this.children[0];
-    }
+	get: function() {
+		return this.children[0];
+	}
 });
 
 TW_Element.prototype.addEventListener = function(type,listener,useCapture) {
 	// Do nothing
 };
 
+Object.defineProperty(TW_Element.prototype, "tagName", {
+	get: function() {
+		return this.tag || "";
+	}
+});
+
 Object.defineProperty(TW_Element.prototype, "className", {
 	get: function() {
 		return this.attributes["class"] || "";
 	},
-    set: function(value) {
-    	this.attributes["class"] = value;
-    }
+	set: function(value) {
+		this.attributes["class"] = value + "";
+	}
 });
 
 Object.defineProperty(TW_Element.prototype, "value", {
 	get: function() {
-		return this.attributes["value"] || "";
+		return this.attributes.value || "";
 	},
-    set: function(value) {
-    	this.attributes["value"] = value;
-    }
+	set: function(value) {
+		this.attributes.value = value + "";
+	}
 });
 
 Object.defineProperty(TW_Element.prototype, "outerHTML", {
-    get: function() {
+	get: function() {
 		var output = [],attr,a,v;
 		output.push("<",this.tag);
 		if(this.attributes) {
@@ -133,8 +165,17 @@ Object.defineProperty(TW_Element.prototype, "outerHTML", {
 			for(a=0; a<attr.length; a++) {
 				v = this.attributes[attr[a]];
 				if(v !== undefined) {
-					output.push(" ",attr[a],"='",$tw.utils.htmlEncode(v),"'");
+					output.push(" ",attr[a],"=\"",$tw.utils.htmlEncode(v),"\"");
 				}
+			}
+		}
+		if(this.style) {
+			var style = [];
+			for(var s in this.style) {
+				style.push(s + ":" + this.style[s] + ";");
+			}
+			if(style.length > 0) {
+				output.push(" style=\"",style.join(""),"\"")
 			}
 		}
 		output.push(">");
@@ -143,7 +184,7 @@ Object.defineProperty(TW_Element.prototype, "outerHTML", {
 			output.push("</",this.tag,">");
 		}
 		return output.join("");
-    }
+	}
 });
 
 Object.defineProperty(TW_Element.prototype, "innerHTML", {
@@ -162,16 +203,31 @@ Object.defineProperty(TW_Element.prototype, "innerHTML", {
 			return b.join("");
 		}
 	},
-    set: function(value) {
-    	this.isRaw = true;
-    	this.rawHTML = value;
-    }
+	set: function(value) {
+		this.isRaw = true;
+		this.rawHTML = value;
+		this.rawTextContent = null;
+	}
+});
+
+Object.defineProperty(TW_Element.prototype, "textInnerHTML", {
+	set: function(value) {
+		if(this.isRaw) {
+			this.rawTextContent = value;
+		} else {
+			throw "Cannot set textInnerHTML of a non-raw TW_Element";
+		}
+	}
 });
 
 Object.defineProperty(TW_Element.prototype, "textContent", {
 	get: function() {
 		if(this.isRaw) {
-			throw "Cannot get textContent on a raw TW_Element";
+			if(this.rawTextContent === null) {
+				return "";
+			} else {
+				return this.rawTextContent;
+			}
 		} else {
 			var b = [];
 			$tw.utils.each(this.children,function(node) {
@@ -179,13 +235,16 @@ Object.defineProperty(TW_Element.prototype, "textContent", {
 			});
 			return b.join("");
 		}
+	},
+	set: function(value) {
+		this.children = [new TW_TextNode(value)];
 	}
 });
 
 Object.defineProperty(TW_Element.prototype, "formattedTextContent", {
 	get: function() {
 		if(this.isRaw) {
-			throw "Cannot get formattedTextContent on a raw TW_Element";
+			return "";
 		} else {
 			var b = [],
 				isBlock = $tw.config.htmlBlockElements.indexOf(this.tag) !== -1;
@@ -193,7 +252,7 @@ Object.defineProperty(TW_Element.prototype, "formattedTextContent", {
 				b.push("\n");
 			}
 			if(this.tag === "li") {
-				b.push("* ")
+				b.push("* ");
 			}
 			$tw.utils.each(this.children,function(node) {
 				b.push(node.formattedTextContent);
@@ -219,6 +278,7 @@ var document = {
 	createTextNode: function(text) {
 		return new TW_TextNode(text);
 	},
+	compatMode: "CSS1Compat", // For KaTeX to know that we're not a browser in quirks mode
 	isTiddlyWikiFakeDom: true
 };
 

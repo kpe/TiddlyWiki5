@@ -1,0 +1,6 @@
+title: $:/plugins/tiddlywiki/blog/readme
+type: text/vnd.tiddlywiki
+
+This plugin contains tools to help publish blogs:
+
+* Templates and tools for building static HTML pages and posts

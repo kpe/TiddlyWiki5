@@ -3,42 +3,17 @@ tags: $:/tags/ControlPanel
 caption: {{$:/language/ControlPanel/Plugins/Caption}}
 
 \define lingo-base() $:/language/ControlPanel/Plugins/
+
 \define plugin-table(type)
-<table>
-<tbody>
-<tr>
-<th>
-<<lingo Fields/Description>>
-</th>
-<th>
-<<lingo Fields/Version>>
-</th>
-</tr>
-<$list filter="[!has[draft.of]plugin-type[$type$]sort[description]]">
-<tr>
-<td>
-<$link to={{!!title}}>
-''<$view field="description"><$view field="title"/></$view>''<br>
-<$view field="title"/>
-</$link>
-</td>
-<td>
-<$view field="version"/>
-</td>
-</tr>
-</$list>
-</tbody>
-</table>
+<$set name="plugin-type" value="""$type$""">
+<$set name="qualified-state" value=<<qualify "$:/state/plugin-info">>>
+<$list filter="[!has[draft.of]plugin-type[$type$]sort[description]]" emptyMessage=<<lingo "Empty/Hint">> template="$:/core/ui/Components/plugin-info"/>
+</$set>
+</$set>
 \end
 
-! <<lingo Plugin/Prompt>>
+{{$:/core/ui/ControlPanel/Plugins/AddPlugins}}
 
-<<plugin-table plugin>>
+<<lingo Installed/Hint>>
 
-! <<lingo Theme/Prompt>>
-
-<<plugin-table theme>>
-
-! <<lingo Language/Prompt>>
-
-<<plugin-table language>>
+<<tabs "[[$:/core/ui/ControlPanel/Plugins/Installed/Plugins]] [[$:/core/ui/ControlPanel/Plugins/Installed/Themes]] [[$:/core/ui/ControlPanel/Plugins/Installed/Languages]]" "$:/core/ui/ControlPanel/Plugins/Installed/Plugins">>
